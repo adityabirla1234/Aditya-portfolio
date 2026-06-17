@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+  <!-- Homepage — highest priority, primary "Aditya Birla AI consultant" target -->
+  <url>
+    <loc>https://adityatech.vercel.app/</loc>
+    <lastmod>2025-06-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- AI Consulting page — secondary keyword target -->
+  <url>
+    <loc>https://adityatech.vercel.app/ai-ml</loc>
+    <lastmod>2025-06-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Projects / Portfolio -->
+  <url>
+    <loc>https://adityatech.vercel.app/projects</loc>
+    <lastmod>2025-06-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Experience -->
+  <url>
+    <loc>https://adityatech.vercel.app/experience</loc>
+    <lastmod>2025-06-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+</urlset>
