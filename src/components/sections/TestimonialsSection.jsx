@@ -10,35 +10,35 @@ const ContainerScroll = React.forwardRef(({ children, className, style, ...props
 ));
 ContainerScroll.displayName = "ContainerScroll";
 
-const CardSticky = React.forwardRef(({ index, total = 1, incrementY = 10, children, className, style, ...props }, ref) => {
-  const localRef = React.useRef(null);
-  const setRefs = (node) => {
-    localRef.current = node;
-    if (typeof ref === "function") ref(node);
-    else if (ref) ref.current = node;
-  };
+// Each card sits inside its own "runway" wrapper. The wrapper's height is
+// the card's own height PLUS extra scroll distance — this is what actually
+// gives position:sticky room to stay pinned while the user keeps scrolling.
+// Without this extra per-card space, sticky siblings sit back-to-back in
+// flow and each one only "sticks" for the height of the next card.
+function CardSticky({ index, total = 1, incrementY = 10, wrapperHeight, children, className, style, ...props }) {
+  const wrapperRef = React.useRef(null);
+  const isLast = index === total - 1;
 
   const { scrollYProgress } = useScroll({
-    target: localRef,
+    target: wrapperRef,
     offset: ["start start", "end start"],
   });
-  const isLast = index === total - 1;
-  const scale   = useTransform(scrollYProgress, [0, 1], [1, isLast ? 1 : 0.94]);
-  const opacity = useTransform(scrollYProgress, [0, 1], [1, isLast ? 1 : 0.55]);
+  const scale   = useTransform(scrollYProgress, [0, 0.85, 1], [1, 1, isLast ? 1 : 0.94]);
+  const opacity = useTransform(scrollYProgress, [0, 0.85, 1], [1, 1, isLast ? 1 : 0.55]);
 
   return (
-    <motion.div
-      ref={setRefs}
-      layout="position"
-      style={{ top: index * incrementY, zIndex: index, scale, opacity, ...style }}
-      className={cn("sticky", className)}
-      {...props}
-    >
-      {children}
-    </motion.div>
+    <div ref={wrapperRef} style={{ position: "relative", height: isLast ? "auto" : `${wrapperHeight || 700}px` }}>
+      <motion.div
+        layout="position"
+        style={{ top: index * incrementY, zIndex: index, scale, opacity, ...style }}
+        className={cn("sticky", className)}
+        {...props}
+      >
+        {children}
+      </motion.div>
+    </div>
   );
-});
-CardSticky.displayName = "CardSticky";
+}
 
 function TestimonialCard({ t, i, measuredRef }) {
   return (
@@ -117,16 +117,13 @@ export function TestimonialsSection() {
   const INCREMENT_Y      = 16;
   const SCROLL_MULTIPLIER = 1.2;
   const firstCardRef     = React.useRef(null);
-  const containerRef     = React.useRef(null);
-  const [containerHeight, setContainerHeight] = React.useState(null);
+  const [wrapperHeight, setWrapperHeight] = React.useState(null);
 
   React.useLayoutEffect(() => {
     function compute() {
       if (!firstCardRef.current) return;
-      const cardH       = firstCardRef.current.getBoundingClientRect().height;
-      const scrollPerCard = cardH * SCROLL_MULTIPLIER;
-      const total = (testimonials.length - 1) * scrollPerCard + cardH + (testimonials.length - 1) * INCREMENT_Y;
-      setContainerHeight(total);
+      const cardH = firstCardRef.current.getBoundingClientRect().height;
+      setWrapperHeight(cardH + cardH * SCROLL_MULTIPLIER);
     }
     compute();
     window.addEventListener("resize", compute);
@@ -160,14 +157,12 @@ export function TestimonialsSection() {
           ))}
         </div>
 
-        {/* Mobile sticky stack */}
-        <ContainerScroll
-          ref={containerRef}
-          className="md:hidden"
-          style={{ height: containerHeight ? `${containerHeight}px` : `${testimonials.length * 600}px` }}
-        >
+        {/* Mobile sticky stack — each card wrapped in its own scroll-runway
+            div, so each card gets real pinned scroll time before the next
+            one covers it. */}
+        <ContainerScroll className="md:hidden">
           {testimonials.map((t, i) => (
-            <CardSticky key={t.id} index={i} total={testimonials.length} incrementY={INCREMENT_Y}>
+            <CardSticky key={t.id} index={i} total={testimonials.length} incrementY={INCREMENT_Y} wrapperHeight={wrapperHeight}>
               <TestimonialCard t={t} i={i} measuredRef={i === 0 ? firstCardRef : undefined} />
             </CardSticky>
           ))}
