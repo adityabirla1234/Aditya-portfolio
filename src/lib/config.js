@@ -3,7 +3,7 @@ export const siteConfig = {
   title: "AI Consultant & Full Stack Java Developer | Aditya Birla",
   description: "Aditya Birla is an AI Consultant and Full Stack Java Developer specializing in Generative AI solutions, RAG systems, multi-agent frameworks, and enterprise Spring Boot microservices. Available for AI consulting engagements worldwide.",
   // ← Replace with your real production domain once available (no trailing slash)
-  url: "https://adityatech.vercel.app",
+  url: "https://adityatech-ai.vercel.app",
   locale: "en_US",
   twitterHandle: "@yourhandle",
   keywords: [
