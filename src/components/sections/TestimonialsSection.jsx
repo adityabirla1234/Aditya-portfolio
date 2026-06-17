@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { testimonials } from "../../lib/config";
 import { Quote, Star } from "lucide-react";
 import * as React from "react";
@@ -6,21 +6,38 @@ import * as React from "react";
 function cn(...classes) { return classes.filter(Boolean).join(" "); }
 
 const ContainerScroll = React.forwardRef(({ children, className, style, ...props }, ref) => (
-  <div ref={ref} className={cn("relative w-full", className)} style={{ perspective: "1000px", ...style }} {...props}>{children}</div>
+  <div ref={ref} className={cn("relative w-full", className)} style={style} {...props}>{children}</div>
 ));
 ContainerScroll.displayName = "ContainerScroll";
 
-const CardSticky = React.forwardRef(({ index, incrementY = 10, incrementZ = 10, children, className, style, ...props }, ref) => (
-  <motion.div
-    ref={ref}
-    layout="position"
-    style={{ top: index * incrementY, zIndex: index, ...style }}
-    className={cn("sticky", className)}
-    {...props}
-  >
-    {children}
-  </motion.div>
-));
+const CardSticky = React.forwardRef(({ index, total = 1, incrementY = 10, children, className, style, ...props }, ref) => {
+  const localRef = React.useRef(null);
+  const setRefs = (node) => {
+    localRef.current = node;
+    if (typeof ref === "function") ref(node);
+    else if (ref) ref.current = node;
+  };
+
+  const { scrollYProgress } = useScroll({
+    target: localRef,
+    offset: ["start start", "end start"],
+  });
+  const isLast = index === total - 1;
+  const scale   = useTransform(scrollYProgress, [0, 1], [1, isLast ? 1 : 0.94]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [1, isLast ? 1 : 0.55]);
+
+  return (
+    <motion.div
+      ref={setRefs}
+      layout="position"
+      style={{ top: index * incrementY, zIndex: index, scale, opacity, ...style }}
+      className={cn("sticky", className)}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+});
 CardSticky.displayName = "CardSticky";
 
 function TestimonialCard({ t, i, measuredRef }) {
@@ -150,7 +167,7 @@ export function TestimonialsSection() {
           style={{ height: containerHeight ? `${containerHeight}px` : `${testimonials.length * 600}px` }}
         >
           {testimonials.map((t, i) => (
-            <CardSticky key={t.id} index={i} incrementY={INCREMENT_Y} incrementZ={8}>
+            <CardSticky key={t.id} index={i} total={testimonials.length} incrementY={INCREMENT_Y}>
               <TestimonialCard t={t} i={i} measuredRef={i === 0 ? firstCardRef : undefined} />
             </CardSticky>
           ))}

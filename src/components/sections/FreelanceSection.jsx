@@ -1,6 +1,5 @@
-
 import { useRef, useEffect, useLayoutEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Briefcase, ExternalLink, Calendar } from "lucide-react";
 import * as React from "react";
 
@@ -10,24 +9,42 @@ const ContainerScroll = ({ children, className, style, forwardedRef, ...props })
   <div
     ref={forwardedRef}
     className={cn("relative w-full", className)}
-    style={{ perspective: "1000px", ...style }}
+    style={style}
     {...props}
   >
     {children}
   </div>
 );
 
-const CardSticky = ({ index, incrementY = 10, incrementZ = 10, children, className, style, forwardedRef, ...props }) => (
-  <motion.div
-    ref={forwardedRef}
-    layout="position"
-    style={{ top: index * incrementY, zIndex: index, ...style }}
-    className={cn("sticky", className)}
-    {...props}
-  >
-    {children}
-  </motion.div>
-);
+const CardSticky = ({ index, total = 1, incrementY = 10, children, className, style, forwardedRef, ...props }) => {
+  const localRef = useRef(null);
+  const setRefs = (node) => {
+    localRef.current = node;
+    if (typeof forwardedRef === "function") forwardedRef(node);
+    else if (forwardedRef) forwardedRef.current = node;
+  };
+
+  // Animate scale/opacity as this card is covered by the next one scrolling over it.
+  const { scrollYProgress } = useScroll({
+    target: localRef,
+    offset: ["start start", "end start"],
+  });
+  const isLast = index === total - 1;
+  const scale   = useTransform(scrollYProgress, [0, 1], [1, isLast ? 1 : 0.94]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [1, isLast ? 1 : 0.55]);
+
+  return (
+    <motion.div
+      ref={setRefs}
+      layout="position"
+      style={{ top: index * incrementY, zIndex: index, scale, opacity, ...style }}
+      className={cn("sticky", className)}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 const freelanceProjects = [
   {
@@ -207,8 +224,8 @@ export function FreelanceSection() {
             <CardSticky
               key={project.id}
               index={i}
+              total={freelanceProjects.length}
               incrementY={INCREMENT_Y}
-              incrementZ={8}
               forwardedRef={i === 0 ? firstCardRef : undefined}
             >
               <motion.div
