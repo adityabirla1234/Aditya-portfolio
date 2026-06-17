@@ -16,12 +16,13 @@ const ContainerScroll = ({ children, className, style, forwardedRef, ...props })
   </div>
 );
 
-// Each card sits inside its own "runway" wrapper. The wrapper's height is
-// the card's own height PLUS extra scroll distance — this is what actually
-// gives position:sticky room to stay pinned while the user keeps scrolling.
-// Without this extra per-card space, sticky siblings sit back-to-back in
-// flow and each one only "sticks" for the height of the next card, which
-// is what caused the previous partial/instant-snap behavior.
+// Each card sits inside its own wrapper that's only slightly taller than
+// the card itself — this small extra height is the "runway" that lets
+// position:sticky hold the card in place for a brief, visible moment
+// before the next card's sticky child scrolls up and covers it. Too much
+// extra height here shows up as a visible empty gap between cards, since
+// the sticky child stays pinned at the TOP of its own wrapper while the
+// rest of the wrapper's height sits empty beneath it.
 const CardSticky = ({ index, total = 1, incrementY = 10, wrapperHeight, children, className, style, forwardedRef, ...props }) => {
   const wrapperRef = useRef(null);
   const isLast = index === total - 1;
@@ -34,7 +35,7 @@ const CardSticky = ({ index, total = 1, incrementY = 10, wrapperHeight, children
   const opacity = useTransform(scrollYProgress, [0, 0.85, 1], [1, 1, isLast ? 1 : 0.55]);
 
   return (
-    <div ref={wrapperRef} style={{ position: "relative", height: isLast ? "auto" : `${wrapperHeight || 900}px` }}>
+    <div ref={wrapperRef} style={{ position: "relative", height: isLast ? "auto" : (wrapperHeight ? `${wrapperHeight}px` : "auto") }}>
       <motion.div
         ref={forwardedRef}
         layout="position"
@@ -160,7 +161,7 @@ function ProjectCard({ project }) {
 
 export function FreelanceSection() {
   const INCREMENT_Y      = 16;
-  const SCROLL_MULTIPLIER = 1.2;
+  const SCROLL_MULTIPLIER = 0.15; // small runway: just enough scroll room to feel the pin, not a visible gap
   const firstCardRef     = useRef(null);
   const [wrapperHeight, setWrapperHeight] = useState(null);
 
@@ -168,9 +169,10 @@ export function FreelanceSection() {
     function compute() {
       if (!firstCardRef.current) return;
       const cardH = firstCardRef.current.getBoundingClientRect().height;
-      // Each non-last card's wrapper = its own height + extra scroll
-      // distance reserved purely so position:sticky has room to stay
-      // pinned before the next card covers it.
+      // Each non-last card's wrapper = its own height + a small extra
+      // scroll distance reserved so position:sticky has a brief moment
+      // pinned before the next card covers it. Keep this small — any
+      // excess shows up as visible empty space below the card.
       setWrapperHeight(cardH + cardH * SCROLL_MULTIPLIER);
     }
     compute();

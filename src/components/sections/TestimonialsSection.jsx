@@ -10,11 +10,13 @@ const ContainerScroll = React.forwardRef(({ children, className, style, ...props
 ));
 ContainerScroll.displayName = "ContainerScroll";
 
-// Each card sits inside its own "runway" wrapper. The wrapper's height is
-// the card's own height PLUS extra scroll distance — this is what actually
-// gives position:sticky room to stay pinned while the user keeps scrolling.
-// Without this extra per-card space, sticky siblings sit back-to-back in
-// flow and each one only "sticks" for the height of the next card.
+// Each card sits inside its own wrapper that's only slightly taller than
+// the card itself — this small extra height is the "runway" that lets
+// position:sticky hold the card in place for a brief, visible moment
+// before the next card's sticky child scrolls up and covers it. Too much
+// extra height shows up as a visible empty gap between cards, since the
+// sticky child stays pinned at the TOP of its own wrapper while the rest
+// of the wrapper's height sits empty beneath it.
 function CardSticky({ index, total = 1, incrementY = 10, wrapperHeight, children, className, style, ...props }) {
   const wrapperRef = React.useRef(null);
   const isLast = index === total - 1;
@@ -27,7 +29,7 @@ function CardSticky({ index, total = 1, incrementY = 10, wrapperHeight, children
   const opacity = useTransform(scrollYProgress, [0, 0.85, 1], [1, 1, isLast ? 1 : 0.55]);
 
   return (
-    <div ref={wrapperRef} style={{ position: "relative", height: isLast ? "auto" : `${wrapperHeight || 700}px` }}>
+    <div ref={wrapperRef} style={{ position: "relative", height: isLast ? "auto" : (wrapperHeight ? `${wrapperHeight}px` : "auto") }}>
       <motion.div
         layout="position"
         style={{ top: index * incrementY, zIndex: index, scale, opacity, ...style }}
@@ -115,7 +117,7 @@ function TestimonialCard({ t, i, measuredRef }) {
 
 export function TestimonialsSection() {
   const INCREMENT_Y      = 16;
-  const SCROLL_MULTIPLIER = 1.2;
+  const SCROLL_MULTIPLIER = 0.15; // small runway: just enough scroll room to feel the pin, not a visible gap
   const firstCardRef     = React.useRef(null);
   const [wrapperHeight, setWrapperHeight] = React.useState(null);
 
