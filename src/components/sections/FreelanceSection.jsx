@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Briefcase, ExternalLink, Calendar } from "lucide-react";
@@ -20,7 +21,7 @@ const CardSticky = ({ index, incrementY = 10, incrementZ = 10, children, classNa
   <motion.div
     ref={forwardedRef}
     layout="position"
-    style={{ top: index * incrementY, z: index * incrementZ, backfaceVisibility: "hidden", ...style }}
+    style={{ top: index * incrementY, zIndex: index, ...style }}
     className={cn("sticky", className)}
     {...props}
   >

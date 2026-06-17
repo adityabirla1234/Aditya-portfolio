@@ -14,7 +14,7 @@ const CardSticky = React.forwardRef(({ index, incrementY = 10, incrementZ = 10, 
   <motion.div
     ref={ref}
     layout="position"
-    style={{ top: index * incrementY, z: index * incrementZ, backfaceVisibility: "hidden", ...style }}
+    style={{ top: index * incrementY, zIndex: index, ...style }}
     className={cn("sticky", className)}
     {...props}
   >
