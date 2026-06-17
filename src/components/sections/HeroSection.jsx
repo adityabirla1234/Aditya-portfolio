@@ -6,7 +6,7 @@ import { ArrowRight, ChevronDown } from "lucide-react";
 import { LiquidButton } from "../ui/LiquidButton";
 
 const TECH_CHIPS = [
-  "Java 21", "Spring Boot 3", "Apache Kafka", "AWS", "RAG Systems", "LLM Engineering",
+  "Java 21", "Spring Boot 3", "AWS", "Agentic AI", "RAG Systems", "LLM Engineering",
 ];
 
 function AnimatedStat({ value, label }) {
@@ -229,7 +229,7 @@ export function HeroSection() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex flex-wrap items-center gap-3"
             >
-              <LiquidButton variant="default" size="lg" onClick={() => scrollTo("projects")}>
+              <LiquidButton variant="default" size="lg" onClick={() => scrollTo("freelance")}>
                 View projects <ArrowRight size={16} />
               </LiquidButton>
               <LiquidButton variant="ghost" size="lg" onClick={() => openWhatsApp()}>
