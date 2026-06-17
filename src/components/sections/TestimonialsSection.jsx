@@ -1,51 +1,10 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { testimonials } from "../../lib/config";
 import { Quote, Star } from "lucide-react";
-import * as React from "react";
 
-function cn(...classes) { return classes.filter(Boolean).join(" "); }
-
-const ContainerScroll = React.forwardRef(({ children, className, style, ...props }, ref) => (
-  <div ref={ref} className={cn("relative w-full", className)} style={style} {...props}>{children}</div>
-));
-ContainerScroll.displayName = "ContainerScroll";
-
-// Each card sits inside its own wrapper that's only slightly taller than
-// the card itself — this small extra height is the "runway" that lets
-// position:sticky hold the card in place for a brief, visible moment
-// before the next card's sticky child scrolls up and covers it. Too much
-// extra height shows up as a visible empty gap between cards, since the
-// sticky child stays pinned at the TOP of its own wrapper while the rest
-// of the wrapper's height sits empty beneath it.
-function CardSticky({ index, total = 1, incrementY = 10, wrapperHeight, children, className, style, ...props }) {
-  const wrapperRef = React.useRef(null);
-  const isLast = index === total - 1;
-
-  const { scrollYProgress } = useScroll({
-    target: wrapperRef,
-    offset: ["start start", "end start"],
-  });
-  const scale   = useTransform(scrollYProgress, [0, 0.85, 1], [1, 1, isLast ? 1 : 0.94]);
-  const opacity = useTransform(scrollYProgress, [0, 0.85, 1], [1, 1, isLast ? 1 : 0.55]);
-
-  return (
-    <div ref={wrapperRef} style={{ position: "relative", height: isLast ? "auto" : (wrapperHeight ? `${wrapperHeight}px` : "auto") }}>
-      <motion.div
-        layout="position"
-        style={{ top: index * incrementY, zIndex: index, scale, opacity, ...style }}
-        className={cn("sticky", className)}
-        {...props}
-      >
-        {children}
-      </motion.div>
-    </div>
-  );
-}
-
-function TestimonialCard({ t, i, measuredRef }) {
+function TestimonialCard({ t, i }) {
   return (
     <motion.figure
-      ref={measuredRef}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
@@ -116,22 +75,6 @@ function TestimonialCard({ t, i, measuredRef }) {
 }
 
 export function TestimonialsSection() {
-  const INCREMENT_Y      = 16;
-  const SCROLL_MULTIPLIER = 0.15; // small runway: just enough scroll room to feel the pin, not a visible gap
-  const firstCardRef     = React.useRef(null);
-  const [wrapperHeight, setWrapperHeight] = React.useState(null);
-
-  React.useLayoutEffect(() => {
-    function compute() {
-      if (!firstCardRef.current) return;
-      const cardH = firstCardRef.current.getBoundingClientRect().height;
-      setWrapperHeight(cardH + cardH * SCROLL_MULTIPLIER);
-    }
-    compute();
-    window.addEventListener("resize", compute);
-    return () => window.removeEventListener("resize", compute);
-  }, []);
-
   return (
     <section id="testimonials" className="relative py-20" style={{ background: "#0E0E10" }}>
       <div
@@ -152,23 +95,12 @@ export function TestimonialsSection() {
           </h2>
         </motion.div>
 
-        {/* Desktop grid */}
-        <div className="hidden md:grid md:grid-cols-3 gap-6">
+        {/* Responsive grid: 1 column on mobile, 3 columns from md up */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((t, i) => (
             <TestimonialCard key={t.id} t={t} i={i} />
           ))}
         </div>
-
-        {/* Mobile sticky stack — each card wrapped in its own scroll-runway
-            div, so each card gets real pinned scroll time before the next
-            one covers it. */}
-        <ContainerScroll className="md:hidden">
-          {testimonials.map((t, i) => (
-            <CardSticky key={t.id} index={i} total={testimonials.length} incrementY={INCREMENT_Y} wrapperHeight={wrapperHeight}>
-              <TestimonialCard t={t} i={i} measuredRef={i === 0 ? firstCardRef : undefined} />
-            </CardSticky>
-          ))}
-        </ContainerScroll>
       </div>
     </section>
   );

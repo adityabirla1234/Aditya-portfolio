@@ -1,53 +1,5 @@
-import { useRef, useEffect, useLayoutEffect, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Briefcase, ExternalLink, Calendar } from "lucide-react";
-import * as React from "react";
-
-function cn(...classes) { return classes.filter(Boolean).join(" "); }
-
-const ContainerScroll = ({ children, className, style, forwardedRef, ...props }) => (
-  <div
-    ref={forwardedRef}
-    className={cn("relative w-full", className)}
-    style={style}
-    {...props}
-  >
-    {children}
-  </div>
-);
-
-// Each card sits inside its own wrapper that's only slightly taller than
-// the card itself — this small extra height is the "runway" that lets
-// position:sticky hold the card in place for a brief, visible moment
-// before the next card's sticky child scrolls up and covers it. Too much
-// extra height here shows up as a visible empty gap between cards, since
-// the sticky child stays pinned at the TOP of its own wrapper while the
-// rest of the wrapper's height sits empty beneath it.
-const CardSticky = ({ index, total = 1, incrementY = 10, wrapperHeight, children, className, style, forwardedRef, ...props }) => {
-  const wrapperRef = useRef(null);
-  const isLast = index === total - 1;
-
-  const { scrollYProgress } = useScroll({
-    target: wrapperRef,
-    offset: ["start start", "end start"],
-  });
-  const scale   = useTransform(scrollYProgress, [0, 0.85, 1], [1, 1, isLast ? 1 : 0.94]);
-  const opacity = useTransform(scrollYProgress, [0, 0.85, 1], [1, 1, isLast ? 1 : 0.55]);
-
-  return (
-    <div ref={wrapperRef} style={{ position: "relative", height: isLast ? "auto" : (wrapperHeight ? `${wrapperHeight}px` : "auto") }}>
-      <motion.div
-        ref={forwardedRef}
-        layout="position"
-        style={{ top: index * incrementY, zIndex: index, scale, opacity, ...style }}
-        className={cn("sticky", className)}
-        {...props}
-      >
-        {children}
-      </motion.div>
-    </div>
-  );
-};
 
 const freelanceProjects = [
   {
@@ -160,26 +112,6 @@ function ProjectCard({ project }) {
 }
 
 export function FreelanceSection() {
-  const INCREMENT_Y      = 16;
-  const SCROLL_MULTIPLIER = 0.15; // small runway: just enough scroll room to feel the pin, not a visible gap
-  const firstCardRef     = useRef(null);
-  const [wrapperHeight, setWrapperHeight] = useState(null);
-
-  useLayoutEffect(() => {
-    function compute() {
-      if (!firstCardRef.current) return;
-      const cardH = firstCardRef.current.getBoundingClientRect().height;
-      // Each non-last card's wrapper = its own height + a small extra
-      // scroll distance reserved so position:sticky has a brief moment
-      // pinned before the next card covers it. Keep this small — any
-      // excess shows up as visible empty space below the card.
-      setWrapperHeight(cardH + cardH * SCROLL_MULTIPLIER);
-    }
-    compute();
-    window.addEventListener("resize", compute);
-    return () => window.removeEventListener("resize", compute);
-  }, []);
-
   return (
     <section id="freelance" className="relative py-20" style={{ background: "#0E0E10" }}>
       <div
@@ -205,8 +137,8 @@ export function FreelanceSection() {
           </p>
         </motion.div>
 
-        {/* Desktop 3-col grid */}
-        <div className="hidden lg:grid lg:grid-cols-3 gap-6">
+        {/* Responsive grid: 1 column on mobile, 3 columns from lg up */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {freelanceProjects.map((project, i) => (
             <motion.div
               key={project.id}
@@ -219,31 +151,6 @@ export function FreelanceSection() {
             </motion.div>
           ))}
         </div>
-
-        {/* Mobile / tablet sticky stack — each card wrapped in its own
-            scroll-runway div, so each card gets real pinned scroll time
-            before the next one covers it. */}
-        <ContainerScroll className="lg:hidden">
-          {freelanceProjects.map((project, i) => (
-            <CardSticky
-              key={project.id}
-              index={i}
-              total={freelanceProjects.length}
-              incrementY={INCREMENT_Y}
-              wrapperHeight={wrapperHeight}
-              forwardedRef={i === 0 ? firstCardRef : undefined}
-            >
-              <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-              >
-                <ProjectCard project={project} />
-              </motion.div>
-            </CardSticky>
-          ))}
-        </ContainerScroll>
       </div>
     </section>
   );
